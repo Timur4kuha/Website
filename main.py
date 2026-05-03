@@ -1,69 +1,33 @@
-# ====== ИМПОРТЫ ======
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-import requests  # нужен чтобы отправлять запрос в бота
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+import os
 
 app = FastAPI()
 
-# 🔐 Секрет (должен совпадать с ботом)
-SECRET_KEY = "123456"
-
-# 🤖 Ссылка на бота (ВАЖНО: вставь свой домен бота)
-BOT_API_URL = "https://ТВОЙ-БОТ.up.railway.app/reward"
-
-# ====== ПРОВЕРКА (чтобы не было 502) ======
+# ====== ГЛАВНАЯ СТРАНИЦА ======
 @app.get("/")
 async def home():
     return {"status": "ok"}
 
-# ====== СТРАНИЦА ЗАДАНИЯ ======
+# ====== СТРАНИЦА САЙТА ======
 @app.get("/task")
-async def task(click_id: str):
-    return HTMLResponse(f"""
+async def task():
+    return HTMLResponse("""
     <html>
     <body style="text-align:center;font-family:sans-serif;">
-        <h2>📋 Выполни задание</h2>
-        <p>Нажми кнопку и выполни действие</p>
+        <h1>Сайт работает ✅</h1>
+        <p>Если ты это видишь — всё настроено правильно</p>
 
-        <!-- КНОПКА -->
-        <button id="btn" disabled style="padding:15px 25px;font-size:18px;">
-            Перейти к заданию
+        <button onclick="alert('Кнопка работает!')" 
+        style="padding:15px 25px;font-size:18px;">
+            Нажми меня
         </button>
-
-        <script>
-            // ⏳ Задержка 3 секунды (анти-бот)
-            setTimeout(() => {{
-                document.getElementById("btn").disabled = false;
-            }}, 3000);
-
-            // 🔗 Переход на /go
-            document.getElementById("btn").onclick = () => {{
-                window.location.href = "/go?click_id={click_id}";
-            }};
-        </script>
     </body>
     </html>
     """)
 
-# ====== РЕДИРЕКТ НА ОФФЕР ======
-@app.get("/go")
-async def go(click_id: str):
-    # 👉 пока тест (потом заменишь на реальный оффер)
-    offer_link = f"https://google.com/?subid={click_id}"
-
-    return RedirectResponse(offer_link)
-
-# ====== POSTBACK (ИМИТАЦИЯ) ======
-@app.get("/postback")
-async def postback(click_id: str, key: str):
-    # 🔐 проверка ключа
-    if key != SECRET_KEY:
-        return JSONResponse({"status": "error"})
-
-    # 📩 отправляем запрос в бота (начисление баллов)
-    try:
-        requests.get(f"{BOT_API_URL}?click_id={click_id}&key={SECRET_KEY}")
-    except:
-        return JSONResponse({"status": "bot_error"})
-
-    return JSONResponse({"status": "ok"})
+# ====== ЗАПУСК (ВАЖНО ДЛЯ RAILWAY) ======
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
